@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IronCore GMS — User Management</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f4;
+      --bg-tertiary: #eeede9;
+      --text-primary: #1c1c1b;
+      --text-secondary: #78716c;
+      --text-danger: #a32d2d;
+      --text-success: #3B6D11;
+      --border-primary: #1c1c1b;
+      --border-secondary: #d6d3d1;
+      --border-tertiary: #e7e5e4;
+      --radius-lg: 10px;
+      --radius-md: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif
+    }
+
+    .app {
+      min-height: 100vh;
+      background: var(--bg-tertiary);
+      display: flex;
+      flex-direction: column
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh
+    }
+
+    .screen.active {
+      display: flex
+    }
+
+    /* ── Login ── */
+    .login-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem
+    }
+
+    .login-card {
+      background: var(--bg-primary);
+      border: .5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 380px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -.01em
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: .07em;
+      text-transform: uppercase
+    }
+
+    .screen-title {
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: .2rem;
+      letter-spacing: -.01em
+    }
+
+    .screen-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 1.75rem
+    }
+
+    .field {
+      margin-bottom: 1rem
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: .5px solid var(--border-secondary);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 0 12px;
+      height: 38px;
+      font-size: 13px;
+      border-radius: 4px;
+      outline: none;
+      transition: border .15s;
+      font-family: 'Inter', sans-serif
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--border-primary)
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 38px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: .01em
+    }
+
+    .btn-primary:hover {
+      opacity: .85
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-family: 'Inter', sans-serif
+    }
+
+    .btn-link:hover {
+      color: var(--text-primary)
+    }
+
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: .75rem
+    }
+
+    .err-msg {
+      font-size: 13px;
+      color: var(--text-danger);
+      margin-bottom: 10px;
+      display: none
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      height: 52px;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: .25rem;
+      flex-shrink: 0
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 1.5rem
+    }
+
+    .topbar-brand-icon {
+      width: 28px;
+      height: 28px;
+      background: #fff1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px
+    }
+
+    .topbar-brand-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #fff
+    }
+
+    .topbar-brand-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -.01em
+    }
+
+    .tab {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      font-size: 13px;
+      color: #ffffff88;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      white-space: nowrap
+    }
+
+    .tab:hover {
+      color: #fff
+    }
+
+    .tab.active {
+      color: #fff;
+      border-bottom-color: #fff
+    }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #3a3a5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: #fff
+    }
+
+    .topbar-username {
+      font-size: 13px;
+      color: #ffffff88
+    }
+
+    .logout-btn {
+      background: none;
+      border: .5px solid #ffffff33;
+      border-radius: 4px;
+      color: #ffffff77;
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif
+    }
+
+    .logout-btn:hover {
+      color: #fff;
+      border-color: #fff6
+    }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow: auto
+    }
+
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block
+    }
+
+    .page-header {
+      margin-bottom: 1.5rem
+    }
+
+    .page-title {
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -.02em
+    }
+
+    .page-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px
+    }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 1rem
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -.02em
+    }
+
+    .stat-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-primary);
+      border: .5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      letter-spacing: .06em;
+      text-transform: uppercase
+    }
+
+    /* ── Toolbar + Table ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap
+    }
+
+    .toolbar input[type=text] {
+      height: 34px;
+      border: .5px solid var(--border-secondary);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 0 10px;
+      font-size: 13px;
+      border-radius: 4px;
+      outline: none;
+      flex: 1;
+      min-width: 160px;
+      font-family: 'Inter', sans-serif
+    }
+
+    .toolbar select {
+      height: 34px;
+      border: .5px solid var(--border-secondary);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 0 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      outline: none;
+      font-family: 'Inter', sans-serif
+    }
+
+    .btn-sm {
+      height: 34px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      border: .5px solid var(--border-secondary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap
+    }
+
+    .btn-sm:hover {
+      background: var(--bg-secondary)
+    }
+
+    .btn-sm.dark {
+      background: #1a1a2e;
+      color: #fff;
+      border-color: #1a1a2e
+    }
+
+    .btn-sm.dark:hover {
+      opacity: .85
+    }
+
+    .btn-sm.danger {
+      background: #a32d2d;
+      color: #fff;
+      border-color: #a32d2d
+    }
+
+    .btn-sm.danger:hover {
+      opacity: .85
+    }
+
+    .btn-sm.success {
+      background: #3B6D11;
+      color: #fff;
+      border-color: #3B6D11
+    }
+
+    .btn-sm.success:hover {
+      opacity: .85
+    }
+
+    .table-wrap {
+      background: var(--bg-primary);
+      border: .5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      overflow: hidden
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: .5px solid var(--border-tertiary);
+      background: var(--bg-secondary);
+      letter-spacing: .06em;
+      text-transform: uppercase
+    }
+
+    td {
+      font-size: 13px;
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-bottom: .5px solid var(--border-tertiary)
+    }
+
+    tr:last-child td {
+      border-bottom: none
+    }
+
+    tr:hover td {
+      background: var(--bg-secondary)
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .03em
+    }
+
+    .badge.active {
+      background: #EAF3DE;
+      color: #3B6D11
+    }
+
+    .badge.inactive {
+      background: #F1EFE8;
+      color: #5F5E5A
+    }
+
+    .td-actions {
+      display: flex;
+      gap: 6px
+    }
+
+    /* ── About ── */
+    .about-hero {
+      background: #1a1a2e;
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem
+    }
+
+    .about-icon {
+      width: 52px;
+      height: 52px;
+      background: #fff1;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .about-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: #fff
+    }
+
+    .about-app-name {
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -.02em
+    }
+
+    .about-version {
+      font-size: 12px;
+      color: #ffffff55;
+      margin-top: 4px
+    }
+
+    .about-tagline {
+      font-size: 13px;
+      color: #ffffff88;
+      margin-top: 8px
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .about-section {
+      background: var(--bg-primary);
+      border: .5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem
+    }
+
+    .about-section-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: .75rem
+    }
+
+    .about-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: .5px solid var(--border-tertiary);
+      font-size: 13px
+    }
+
+    .about-row:last-child {
+      border-bottom: none
+    }
+
+    .about-row-key {
+      color: var(--text-secondary)
+    }
+
+    .about-row-val {
+      color: var(--text-primary);
+      font-weight: 500
+    }
+
+    /* ── Modals ── */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: #0008;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem
+    }
+
+    .modal-bg.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border: .5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: .2rem;
+      letter-spacing: -.01em
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 1.25rem
+    }
+
+    .modal-actions button {
+      flex: 1;
+      height: 38px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif
+    }
+
+    .modal-actions .cancel-btn {
+      border: .5px solid var(--border-secondary);
+      background: none;
+      color: var(--text-primary)
+    }
+
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 1rem 0
+    }
+
+    .success-msg .check {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #EAF3DE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px
+    }
+
+    .success-msg p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px
+    }
+
+    .success-msg strong {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary)
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 13px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      z-index: 200;
+      display: none;
+      white-space: nowrap
+    }
+
+    .toast.error {
+      background: #a32d2d
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app" id="app">
+
+    <!-- ════════════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════════════ -->
+    <div class="screen active" id="screen-login">
+      <div class="login-wrap">
+        <div class="login-card">
+          <div class="brand">
+            <div class="brand-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+              </svg></div>
+            <div>
+              <div class="brand-name">IronCore GMS</div>
+              <div class="brand-sub">Gym Management System</div>
+            </div>
+          </div>
+          <div class="screen-title">Sign in</div>
+          <div class="screen-sub">Enter your credentials to continue</div>
+          <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="admin" /></div>
+          <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')doLogin()" /></div>
+          <div class="err-msg" id="login-err"></div>
+          <button class="btn-primary" onclick="doLogin()">Sign in</button>
+          <div class="form-footer"><button class="btn-link" onclick="openModal('modal-forgot')">Forgot
+              password?</button></div>
+          <p style="font-size:11px;color:var(--text-secondary);margin-top:1.5rem;text-align:center">Default: admin /
+            admin123</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     DASHBOARD SCREEN
+════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-dashboard">
+      <div class="topbar">
+        <div class="topbar-brand">
+          <div class="topbar-brand-icon"><svg viewBox="0 0 24 24">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+            </svg></div>
+          <span class="topbar-brand-name">IronCore GMS</span>
+        </div>
+        <div class="tab active" onclick="showPage('overview',this)">Dashboard</div>
+        <div class="tab" onclick="showPage('users',this);loadUsers()">Users</div>
+        <div class="tab" onclick="showPage('transact',this);loadTransactData()">Transactions</div>
+        <div class="tab" onclick="showPage('reports',this)">Reports</div>
+        <div class="topbar-user">
+          <div class="avatar" id="topbar-avatar">AD</div>
+          <span class="topbar-username" id="topbar-name">admin</span>
+          <button class="logout-btn" onclick="doLogout()">Sign out</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- Dashboard overview page -->
+        <div class="page active" id="page-overview">
+          <div class="page-header">
+            <div class="page-title">Dashboard</div>
+            <div class="page-desc">Overview of system activity</div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Accounts</div>
+              <div class="stat-value" id="stat-total">—</div>
+              <div class="stat-note">All registered users</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Active</div>
+              <div class="stat-value" id="stat-active">—</div>
+              <div class="stat-note">Can log in</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Inactive</div>
+              <div class="stat-value" id="stat-inactive">—</div>
+              <div class="stat-note">Access suspended</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Logged in as</div>
+              <div class="stat-value" style="font-size:15px;padding-top:6px" id="stat-me">—</div>
+              <div class="stat-note">Current session</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Quick actions</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn-sm dark" onclick="openAddModal()">+ Add Account</button>
+              <button class="btn-sm" onclick="showPage('users',document.querySelectorAll('.tab')[1]);loadUsers()">View
+                Account List</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Management page -->
+        <div class="page" id="page-users">
+          <div class="page-header">
+            <div class="page-title">User Management</div>
+            <div class="page-desc">Add, update, activate, or deactivate system accounts</div>
+          </div>
+          <div class="toolbar">
+            <input type="text" id="search-input" placeholder="Search by name, username, or email…"
+              oninput="loadUsers()" />
+            <select id="filter-status" onchange="loadUsers()">
+              <option value="">All status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <button class="btn-sm dark" onclick="openAddModal()">+ Add Account</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr>
+                  <td colspan="7" style="text-align:center;color:var(--text-secondary);padding:2rem">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transactions page -->
+        <div class="page" id="page-transact">
+          <div class="page-header">
+            <div class="page-title">Gym Transactions</div>
+          </div>
+          <div class="about-grid">
+            <div class="card">
+              <div class="card-title">1. Membership Enrollment</div>
+              <div class="field"><label>Member</label><select id="sub-user"></select></div>
+              <div class="field"><label>Plan</label><select id="sub-plan"></select></div>
+              <button class="btn-sm dark" onclick="saveTransact('sub')">Process Enrollment</button>
+            </div>
+            <div class="card">
+              <div class="card-title">2. Member Check-in</div>
+              <div class="field"><label>Member</label><select id="att-user"></select></div><br>
+              <button class="btn-sm success" onclick="saveTransact('checkin')">Log Attendance</button>
+            </div>
+            <div class="card">
+              <div class="card-title">3. Supplement/Shop Sale</div>
+              <div class="field"><label>Member</label><select id="sale-user"></select></div>
+              <div class="field"><label>Product</label><select id="sale-prod"></select></div>
+              <button class="btn-sm dark" onclick="saveTransact('sale')">Complete Sale</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports page -->
+        <div class="page" id="page-reports">
+          <div class="page-header">
+            <div class="page-title">System Reports</div>
+          </div>
+          <div class="toolbar">
+            <select id="report-type" onchange="loadReportGrid()">
+              <option value="subs">Membership Report</option>
+              <option value="sales">Sales Report</option>
+              <option value="att">Attendance Report</option>
+            </select>
+            <button class="btn-sm success" onclick="exportToExcel()">Export to MS Excel</button>
+          </div>
+          <div class="table-wrap">
+            <table id="report-table">
+              <thead>
+                <tr id="report-head"></tr>
+              </thead>
+              <tbody id="report-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /screen-dashboard -->
+
+  </div><!-- /app -->
+
+  <!-- ════════════════════════════════════════════════
+     MODAL: Forgot Password / Recovery
+════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="modal-forgot">
+    <div class="modal">
+      <div id="forgot-form-wrap">
+        <div class="modal-title">Password Recovery</div>
+        <div class="modal-sub">Enter your username or registered email address</div>
+        <div class="field"><label>Username or Email</label><input type="text" id="recovery-input"
+            placeholder="admin or admin@college.edu" /></div>
+        <div class="err-msg" id="forgot-err"></div>
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal('modal-forgot')">Cancel</button>
+          <button class="btn-primary" style="flex:1" onclick="doRecover()">Send Reset Link</button>
+        </div>
+      </div>
+      <div class="success-msg" id="forgot-success">
+        <div class="check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B6D11"
+            stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12" />
+          </svg></div>
+        <strong>Reset link sent</strong>
+        <p>If the account exists, a reset link has been sent to the registered email. Link expires in 30 minutes.</p>
+        <div style="margin-top:1rem"><button class="btn-primary" onclick="closeModal('modal-forgot')">Back to Sign
+            in</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+     MODAL: Add Account
+════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="modal-add">
+    <div class="modal">
+      <div class="modal-title">Add Account</div>
+      <div class="modal-sub">Create a new system user account</div>
+      <div class="field"><label>Username</label><input type="text" id="add-username" placeholder="jdelacruz" /></div>
+      <div class="field"><label>Full Name</label><input type="text" id="add-fullname" placeholder="Juan Dela Cruz" />
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="add-email" placeholder="juan@college.edu" /></div>
+      <div class="field"><label>Password</label><input type="password" id="add-password"
+          placeholder="Min. 6 characters" /></div>
+      <div class="err-msg" id="add-err"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('modal-add')">Cancel</button>
+        <button class="btn-primary" style="flex:1" onclick="doAddUser()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+     MODAL: Edit Account
+════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="modal-edit">
+    <div class="modal">
+      <div class="modal-title">Edit Account</div>
+      <div class="modal-sub">Update profile information</div>
+      <input type="hidden" id="edit-user-id" />
+      <div class="field"><label>Full Name</label><input type="text" id="edit-fullname" /></div>
+      <div class="field"><label>Email</label><input type="email" id="edit-email" /></div>
+      <div class="field"><label>New Password <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave
+            blank to keep current)</span></label><input type="password" id="edit-password" placeholder="••••••••" />
+      </div>
+      <div class="err-msg" id="edit-err"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('modal-edit')">Cancel</button>
+        <button class="btn-primary" style="flex:1" onclick="doEditUser()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const BACKEND = 'backend.php';
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    async function api(data) {
+      const fd = new FormData();
+      for (const [k, v] of Object.entries(data)) fd.append(k, v);
+      const res = await fetch(BACKEND, { method: 'POST', body: fd });
+      return res.json();
+    }
+
+    function showToast(msg, error = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (error ? ' error' : '');
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    function setErr(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function showPage(id, el) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      el.classList.add('active');
+    }
+
+    // ── Authentication ────────────────────────────────────────────────────────────
+    async function doLogin() {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value;
+      setErr('login-err', '');
+      if (!u || !p) { setErr('login-err', 'Username and password are required.'); return; }
+
+      const r = await api({ action: 'login', username: u, password: p });
+      if (!r.ok) { setErr('login-err', r.msg); return; }
+
+      const initials = r.data.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('topbar-avatar').textContent = initials;
+      document.getElementById('topbar-name').textContent = r.data.username;
+      document.getElementById('stat-me').textContent = r.data.full_name;
+      document.getElementById('screen-login').classList.remove('active');
+      document.getElementById('screen-dashboard').classList.add('active');
+      loadDashboardStats();
+    }
+
+    async function doLogout() {
+      await api({ action: 'logout' });
+      document.getElementById('screen-dashboard').classList.remove('active');
+      document.getElementById('screen-login').classList.add('active');
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+      // Reset to first tab
+      showPage('overview', document.querySelector('.tab'));
+    }
+
+    // ── Password Recovery ─────────────────────────────────────────────────────────
+    function openForgotModal() {
+      document.getElementById('forgot-form-wrap').style.display = 'block';
+      document.getElementById('forgot-success').style.display = 'none';
+      document.getElementById('recovery-input').value = '';
+      setErr('forgot-err', '');
+      openModal('modal-forgot');
+    }
+
+    async function doRecover() {
+      const input = document.getElementById('recovery-input').value.trim();
+      setErr('forgot-err', '');
+      if (!input) { setErr('forgot-err', 'Please enter your username or email.'); return; }
+
+      const r = await api({ action: 'forgot', input });
+      document.getElementById('forgot-form-wrap').style.display = 'none';
+      document.getElementById('forgot-success').style.display = 'block';
+    }
+
+    // Override the link in login screen
+    document.querySelector('.btn-link').addEventListener('click', function (e) {
+      e.preventDefault();
+      openForgotModal();
+    });
+
+    // ── Dashboard Stats ───────────────────────────────────────────────────────────
+    async function loadDashboardStats() {
+      const r = await api({ action: 'list_users', search: '', status: '' });
+      if (!r.ok) return;
+      const users = r.data;
+      const total = users.length;
+      const active = users.filter(u => u.status === 'active').length;
+      const inactive = total - active;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-active').textContent = active;
+      document.getElementById('stat-inactive').textContent = inactive;
+    }
+
+    // ── User Management ───────────────────────────────────────────────────────────
+    async function loadUsers() {
+      const search = document.getElementById('search-input')?.value ?? '';
+      const status = document.getElementById('filter-status')?.value ?? '';
+      const tbody = document.getElementById('users-tbody');
+
+      const r = await api({ action: 'list_users', search, status });
+      if (!r.ok) { showToast(r.msg, true); return; }
+
+      if (!r.data.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);padding:2rem">No accounts found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = r.data.map(u => `
+    <tr>
+      <td>${u.user_id}</td>
+      <td><strong>${esc(u.username)}</strong></td>
+      <td>${esc(u.full_name)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="badge ${u.status}">${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>
+      <td>${u.created_at.split(' ')[0]}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-sm" style="font-size:12px;height:28px;padding:0 10px" onclick='openEditModal(${JSON.stringify(u)})'>Edit</button>
+          <button class="btn-sm ${u.status === 'active' ? 'danger' : 'success'}" style="font-size:12px;height:28px;padding:0 10px"
+            onclick="toggleStatus(${u.user_id},'${u.status}',this)">
+            ${u.status === 'active' ? 'Deactivate' : 'Activate'}
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Add Account
+    function openAddModal() {
+      ['add-username', 'add-fullname', 'add-email', 'add-password'].forEach(id => document.getElementById(id).value = '');
+      setErr('add-err', '');
+      openModal('modal-add');
+    }
+
+    async function doAddUser() {
+      const data = {
+        action: 'add_user',
+        username: document.getElementById('add-username').value.trim(),
+        full_name: document.getElementById('add-fullname').value.trim(),
+        email: document.getElementById('add-email').value.trim(),
+        password: document.getElementById('add-password').value,
+      };
+      setErr('add-err', '');
+      const r = await api(data);
+      if (!r.ok) { setErr('add-err', r.msg); return; }
+      closeModal('modal-add');
+      showToast(r.msg);
+      loadUsers();
+      loadDashboardStats();
+    }
+
+    // Edit Account
+    function openEditModal(u) {
+      document.getElementById('edit-user-id').value = u.user_id;
+      document.getElementById('edit-fullname').value = u.full_name;
+      document.getElementById('edit-email').value = u.email;
+      document.getElementById('edit-password').value = '';
+      setErr('edit-err', '');
+      openModal('modal-edit');
+    }
+
+    async function doEditUser() {
+      const data = {
+        action: 'update_user',
+        user_id: document.getElementById('edit-user-id').value,
+        full_name: document.getElementById('edit-fullname').value.trim(),
+        email: document.getElementById('edit-email').value.trim(),
+        password: document.getElementById('edit-password').value,
+      };
+      setErr('edit-err', '');
+      const r = await api(data);
+      if (!r.ok) { setErr('edit-err', r.msg); return; }
+      closeModal('modal-edit');
+      showToast(r.msg);
+      loadUsers();
+    }
+
+    // Toggle Status
+    async function toggleStatus(userId, currentStatus, btn) {
+      const action = currentStatus === 'active' ? 'Deactivate' : 'Activate';
+      if (!confirm(`${action} this account?`)) return;
+
+      const r = await api({ action: 'toggle_status', user_id: userId });
+      if (!r.ok) { showToast(r.msg, true); return; }
+      showToast(r.msg);
+      loadUsers();
+      loadDashboardStats();
+    }
+
+    // ── Transaction Dropdowns ─────────────────────────────────────────────────────
+    async function loadTransactData() {
+      const r = await api({ action: 'get_transaction_data' });
+      const fill = (id, list, val, text) => {
+        const el = document.getElementById(id);
+        el.innerHTML = list.map(i => `<option value="${i[val]}">${i[text]}</option>`).join('');
+      };
+      fill('sub-user', r.data.users, 'user_id', 'full_name');
+      fill('att-user', r.data.users, 'user_id', 'full_name');
+      fill('sale-user', r.data.users, 'user_id', 'full_name');
+      fill('sub-plan', r.data.plans, 'plan_id', 'plan_name');
+      fill('sale-prod', r.data.products, 'prod_id', 'prod_name');
+    }
+
+    async function saveTransact(type) {
+      let data = { action: 'transact_' + type };
+      if (type === 'sub') { data.user_id = document.getElementById('sub-user').value; data.plan_id = document.getElementById('sub-plan').value; }
+      if (type === 'checkin') { data.user_id = document.getElementById('att-user').value; }
+      if (type === 'sale') { data.user_id = document.getElementById('sale-user').value; data.prod_id = document.getElementById('sale-prod').value; }
+      const r = await api(data);
+      showToast(r.msg);
+    }
+
+    // ── Report Grid ───────────────────────────────────────────────────────────────
+    let currentReportData = [];
+    async function loadReportGrid() {
+      const type = document.getElementById('report-type').value;
+      const r = await api({ action: 'fetch_report', type });
+      currentReportData = r.data;
+      const head = document.getElementById('report-head');
+      const body = document.getElementById('report-body');
+      if (!r.data.length) { body.innerHTML = 'No records.'; return; }
+
+      const keys = Object.keys(r.data[0]);
+      head.innerHTML = keys.map(k => `<th>${k}</th>`).join('');
+      body.innerHTML = r.data.map(row => `<tr>${keys.map(k => `<td>${row[k]}</td>`).join('')}</tr>`).join('');
+    }
+
+    // ── Excel Export ──────────────────────────────────────────────────────────────
+    async function exportToExcel() {
+      if (!currentReportData.length) return alert("No data to export");
+      const workbook = new ExcelJS.Workbook();
+      const sheet1 = workbook.addWorksheet('Report Data');
+      const sheet2 = workbook.addWorksheet('Analytics');
+
+      // Header
+      sheet1.mergeCells('A1:D1');
+      sheet1.getCell('A1').value = 'IRONCORE GYM MANAGEMENT SYSTEM';
+      sheet1.getCell('A1').font = { size: 16, bold: true };
+
+      // Table headers
+      const keys = Object.keys(currentReportData[0]);
+      sheet1.getRow(3).values = keys;
+
+      // Data rows
+      currentReportData.forEach((row, i) => {
+        sheet1.getRow(4 + i).values = Object.values(row);
+      });
+
+      // Signature
+      const sigRow = 6 + currentReportData.length;
+      sheet1.getCell(`A${sigRow}`).value = 'Generated By: ' + document.getElementById('topbar-name').textContent;
+      sheet1.getCell(`A${sigRow + 2}`).value = '__________________________';
+      sheet1.getCell(`A${sigRow + 3}`).value = 'Authorized Signature';
+
+      // Sheet 2 summary
+      sheet2.getCell('A1').value = 'Summary Statistics';
+      sheet2.getCell('A2').value = 'Total Records';
+      sheet2.getCell('B2').value = currentReportData.length;
+      sheet2.getCell('A4').value = '[Excel Graph Area: Select B2 to generate Chart]';
+
+      // Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(new Blob([buffer]), `IronCore_Report_${Date.now()}.xlsx`);
+    }
+
+    // Close modals on background click
+    document.querySelectorAll('.modal-bg').forEach(bg => {
+      bg.addEventListener('click', e => {
+        if (e.target === bg) bg.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+
+</html>
