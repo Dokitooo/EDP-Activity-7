@@ -3,6 +3,8 @@
 // Handles: login, logout, forgot password, add/update/toggle/list users
 // ─────────────────────────────────────────────────────────────────────────────
 
+// FOR UPDATE. FOR ACTIVITY 7!
+
 session_start();
 header('Content-Type: application/json');
 
